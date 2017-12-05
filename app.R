@@ -11,6 +11,7 @@ library(DT)
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   titlePanel("Ist es kalt genug sein Gesicht zu verhüllen?"),
+  helpText(paste0("Data from ", Sys.time()), "Source: https://www.zamg.ac.at/cms/de/wetter/wetterwerte-analysen"),
   # withMathJax(helpText("Windchill formula $$\\vartheta_\\mathrm{WCT} = 13{,}12 + 0{,}6215 \\cdot \\vartheta_\\mathrm{a} + (0{,}3965 \\cdot \\vartheta_\\mathrm{a} - 11{,}37 ) \\cdot v^{0{,}16} \\!$$")),
   # withMathJax(helpText("Windchill-temperature $$\\vartheta_\\mathrm{WCT}$$")),
   # withMathJax(helpText("Air-temperature $$\\vartheta_\\mathrm{a}$$ in degree celsius")),
