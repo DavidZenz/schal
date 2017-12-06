@@ -10,12 +10,13 @@ library(DT)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-  titlePanel("Ist es kalt genug sein Gesicht zu verhüllen?"),
+  titlePanel("Is it cold enough to mask the face in Austria?"),
   helpText(paste0("Data from ", Sys.time()), "Source: https://www.zamg.ac.at/cms/de/wetter/wetterwerte-analysen"),
   # withMathJax(helpText("Windchill formula $$\\vartheta_\\mathrm{WCT} = 13{,}12 + 0{,}6215 \\cdot \\vartheta_\\mathrm{a} + (0{,}3965 \\cdot \\vartheta_\\mathrm{a} - 11{,}37 ) \\cdot v^{0{,}16} \\!$$")),
   # withMathJax(helpText("Windchill-temperature $$\\vartheta_\\mathrm{WCT}$$")),
   # withMathJax(helpText("Air-temperature $$\\vartheta_\\mathrm{a}$$ in degree celsius")),
   # withMathJax(helpText("and Wind-speed $$v$$ in kmh")),
+  selectInput("mobility", label = "I'm", choices = c("standing", "walking", "running", "riding my bike")),
   leafletOutput("myMap"),
   dataTableOutput("myTable")
 )
@@ -113,14 +114,14 @@ server <- function(input, output) {
   #   addPolygons()
   # 
   # output$myMap <- renderLeaflet(m)
-  map <- leaflet(data = data) %>% addTiles() %>% setView(11.1031011, 47.6783193, zoom = 7) %>% addMarkers(~lon, ~lat, icon = icons)
+  map <- leaflet(data = data) %>% addTiles() %>% setView(11.1031011, 47.6783193, zoom = 7) %>% addAwesomeMarkers(~lon, ~lat, icon = icons, label = ~Ort)
   output$myMap = renderLeaflet(map)
   
   # output$myTable <- renderDataTable(data) %>%
   #   formatStyle("Temp", target = "row", backgroundColor = styleEqual(c(0, 1), c('gray', 'yellow')))
   
   output$myTable<- DT::renderDataTable({ 
-    dat <- datatable(data, options = list(paging = FALSE)) %>%
+    dat <- datatable(select(data, Ort, Windchill, Gehen, Laufen, Fahrrad, Windgeschwindigkeit), options = list(paging = FALSE)) %>%
       formatStyle(c("Windchill", "Gehen", "Laufen", "Fahrrad"), target = "cell", backgroundColor = styleInterval(c(0), c('lightgreen', 'red')))
     return(dat)
   })
