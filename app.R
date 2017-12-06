@@ -5,13 +5,14 @@ library(data.table)
 library(stringr)
 library(dplyr)
 library(leaflet)
-# library(geojsonio)
+library(geojsonio)
 library(DT)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-  titlePanel("Is it cold enough to mask the face in Austria?"),
+  titlePanel("Is it cold enough to mask my face in Austria?"),
   helpText(paste0("Data from ", Sys.time()), "Source: https://www.zamg.ac.at/cms/de/wetter/wetterwerte-analysen"),
+  helpText("Assume 4km/h for walking, 12km/h for running, and 20km/h for riding the bike"),
   # withMathJax(helpText("Windchill formula $$\\vartheta_\\mathrm{WCT} = 13{,}12 + 0{,}6215 \\cdot \\vartheta_\\mathrm{a} + (0{,}3965 \\cdot \\vartheta_\\mathrm{a} - 11{,}37 ) \\cdot v^{0{,}16} \\!$$")),
   # withMathJax(helpText("Windchill-temperature $$\\vartheta_\\mathrm{WCT}$$")),
   # withMathJax(helpText("Air-temperature $$\\vartheta_\\mathrm{a}$$ in degree celsius")),
@@ -73,7 +74,7 @@ server <- function(input, output) {
   wind$Windgeschwindigkeit <- as.numeric(wind$Windgeschwindigkeit)
   
   data <- cbind(select(data, Ort, lon, lat, Höhe.m, Temp, rel.Feuchte, Windspitzen.kmh, Niederschlag.mm, "Sonne.%", Luftdruck.hpa), wind)
-  subset <- data[data$Windgeschwindigkeit > 5,]
+  subset <- data[data$Windgeschwindigkeit > 5 & data$Temp <= 10,]
   
   Windchill <- round(13.12 + 0.6214*subset$Temp + (0.3965*subset$Temp - 11.37)*(subset$Windgeschwindigkeit^0.16), digits = 2)
   Gehen <- round(13.12 + 0.6214*subset$Temp + (0.3965*subset$Temp - 11.37)*((subset$Windgeschwindigkeit+4)^0.16), digits = 2)
@@ -81,11 +82,11 @@ server <- function(input, output) {
   Fahrrad <- round(13.12 + 0.6214*subset$Temp + (0.3965*subset$Temp - 11.37)*((subset$Windgeschwindigkeit+20)^0.16), digits = 2)
   
   bigger <- cbind(subset, Windchill, Gehen, Laufen, Fahrrad)
-  smaller <- cbind(data[data$Windgeschwindigkeit <= 5,], 
-                   Windchill = data[data$Windgeschwindigkeit <= 5,]$Temp, 
-                   Gehen = data[data$Windgeschwindigkeit <= 5,]$Temp, 
-                   Laufen = data[data$Windgeschwindigkeit <= 5,]$Temp, 
-                   Fahrrad = data[data$Windgeschwindigkeit <= 5,]$Temp)
+  smaller <- cbind(data[data$Windgeschwindigkeit <= 5 & data$Temp <= 10,], 
+                   Windchill = data[data$Windgeschwindigkeit <= 5 & data$Temp <= 10,]$Temp, 
+                   Gehen = data[data$Windgeschwindigkeit <= 5 & data$Temp <= 10,]$Temp, 
+                   Laufen = data[data$Windgeschwindigkeit <= 5 & data$Temp <= 10,]$Temp, 
+                   Fahrrad = data[data$Windgeschwindigkeit <= 5 & data$Temp <= 10,]$Temp)
   
   
   data <- rbind(bigger, smaller)
@@ -97,7 +98,7 @@ server <- function(input, output) {
       } else {
         "red"
       }
-      })
+    })
   }
   
   icons <- awesomeIcons(
@@ -107,14 +108,20 @@ server <- function(input, output) {
     markerColor = getColor(data)
   )
   
-  # karte <- geojson_read("laender_999_geo.json", what = "sp")
+  observeEvent(input$mobility, {
+    
+  })
+  
+  karte <- geojson_read("laender_999_geo.json", what = "sp")
   # 
   # m <- leaflet(karte) %>%
   #   addProviderTiles("OpenStreetMap.DE") %>%
   #   addPolygons()
   # 
   # output$myMap <- renderLeaflet(m)
-  map <- leaflet(data = data) %>% addTiles() %>% setView(11.1031011, 47.6783193, zoom = 7) %>% addAwesomeMarkers(~lon, ~lat, icon = icons, label = ~Ort)
+  map <- leaflet(karte) %>% addTiles() %>% 
+    addPolygons() %>%
+    addAwesomeMarkers(data$lon, data$lat, icon = icons, label = data$Ort)
   output$myMap = renderLeaflet(map)
   
   # output$myTable <- renderDataTable(data) %>%
