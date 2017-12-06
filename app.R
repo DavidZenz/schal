@@ -120,7 +120,8 @@ server <- function(input, output) {
   # 
   # output$myMap <- renderLeaflet(m)
   map <- leaflet(karte) %>% addTiles() %>% 
-    addPolygons() %>%
+    addProviderTiles("OpenStreetMap.Mapnik") %>%
+    addPolygons(color = "black", fillColor = "blue", opacity = .3, weight = 2, fillOpacity = 0.1) %>%
     addAwesomeMarkers(data$lon, data$lat, icon = icons, label = data$Ort)
   output$myMap = renderLeaflet(map)
   
